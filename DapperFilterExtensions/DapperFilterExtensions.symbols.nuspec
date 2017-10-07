@@ -12,9 +12,10 @@
 	<licenseUrl>https://github.com/InterestIT/DapperFilterExtensions/blob/master/LICENSE</licenseUrl>
     <copyright>Copyright © 2017 Interest IT - Emmeloord, The Netherlands</copyright>
     <tags>Dapper DapperExtensions InterestIT</tags>
-    <dependencies>
-      <dependency id="Dapper" version="[1.50.2, 2.0)" />
-      <dependency id="DapperExtensions" version="[1.6.3, 2.0)" />
-    </dependencies>
+    <files>
+      <file src="bin\Release\*.dll" target="lib\net461" />
+      <file src="bin\Release\*.pdb" target="lib\net461" />
+      <file src="**\*.cs" target="src" />
+    </files>
   </metadata>
 </package>

@@ -204,3 +204,4 @@ packages/*
 **/bin/*
 
 **/Output/*
+/.vs
