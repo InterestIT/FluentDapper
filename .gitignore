@@ -205,3 +205,4 @@ packages/*
 
 **/Output/*
 /.vs
+*.nupkg
