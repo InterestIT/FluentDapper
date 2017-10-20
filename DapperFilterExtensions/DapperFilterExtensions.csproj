@@ -49,8 +49,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\Gateway.cs" />
+    <Compile Include="Data\IClassMapperFactory.cs" />
     <Compile Include="Data\IDbConnectionFactory.cs" />
     <Compile Include="Data\IGateway.cs" />
+    <Compile Include="Data\IQueryBuilder.cs" />
+    <Compile Include="Data\ISelectQueryBuilder.cs" />
+    <Compile Include="Data\SelectQueryBuilder.cs" />
+    <Compile Include="Data\SortDirection.cs" />
     <Compile Include="Data\SqlConnectionFactory.cs" />
     <Compile Include="Filtering\DataFilter.cs" />
     <Compile Include="Filtering\FilterMetadata.cs" />

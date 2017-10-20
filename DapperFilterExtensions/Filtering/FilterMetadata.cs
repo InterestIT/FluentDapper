@@ -8,7 +8,7 @@ namespace DapperFilterExtensions.Filtering
     {
     }
 
-    public class FilterMetadata<TFilter, TData> : FilterMetadata where TFilter : DataFilter<TFilter, TData>
+    public class FilterMetadata<TFilter, TData> : FilterMetadata where TFilter : IDataFilter<TFilter, TData>
     {
         public Expression<Func<TData, object>> FilterExpression { get; set; }
 

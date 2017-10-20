@@ -27,7 +27,7 @@ namespace DapperFilterExtensions.Filtering
             }
         }
 
-        public IPredicate GetPredicate<TFilter, TData>(TFilter filter) where TFilter : DataFilter<TFilter, TData> where TData : class
+        public IPredicate GetPredicate<TFilter, TData>(IDataFilter<TFilter, TData> filter) where TFilter : IDataFilter<TFilter, TData> where TData : class
         {
             if (filter == null)
                 return null;
@@ -45,7 +45,7 @@ namespace DapperFilterExtensions.Filtering
             {
                 var metadata = (FilterMetadata<TFilter, TData>)untypedMetadata;
 
-                var filterValue = metadata.FilterValue?.Invoke(filter);
+                var filterValue = metadata.FilterValue?.Invoke((TFilter)filter);
                 if (filterValue != null && filterValue != metadata.DefaultValue)
                     predicatesGroup.Predicates.Add(Predicates.Field(metadata.FilterExpression, metadata.FilterType, filterValue));
             }
