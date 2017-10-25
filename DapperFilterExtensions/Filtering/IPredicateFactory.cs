@@ -1,4 +1,4 @@
-﻿using DapperExtensions;
+﻿using DapperFilterExtensions.Data.Predicates;
 
 namespace DapperFilterExtensions.Filtering
 {

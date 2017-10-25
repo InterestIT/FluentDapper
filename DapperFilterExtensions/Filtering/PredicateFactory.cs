@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
-using DapperExtensions;
+using System.Linq.Expressions;
+using System.Reflection;
+using DapperFilterExtensions.Data.Predicates;
 
 namespace DapperFilterExtensions.Filtering
 {
@@ -46,13 +48,29 @@ namespace DapperFilterExtensions.Filtering
                 var metadata = (FilterMetadata<TFilter, TData>)untypedMetadata;
 
                 var filterValue = metadata.FilterValue?.Invoke((TFilter)filter);
-                if (filterValue != null && filterValue != metadata.DefaultValue)
-                    predicatesGroup.Predicates.Add(Predicates.Field(metadata.FilterExpression, metadata.FilterType, filterValue));
+                if (filterValue == null || filterValue == metadata.DefaultValue)
+                    continue;
+
+                var fieldPredicate = GetFieldPredicate(metadata.FilterExpression, metadata.FilterType, filterValue, false);
+                predicatesGroup.Predicates.Add(fieldPredicate);
             }
 
             return predicatesGroup.Predicates.Count > 0
                 ? predicatesGroup
                 : null;
+        }
+
+        private static IPredicate GetFieldPredicate<T>(Expression<Func<T, object>> filterExpression, Operator op, object value, bool negate) where T: class
+        {
+            var memberInfo = ReflectionHelper.GetProperty(filterExpression);
+            return new FieldPredicate<T>
+            {
+                EntityType = typeof(T),
+                PropertyName = memberInfo.Name,
+                Operator = op,
+                Value = value,
+                Negate = negate
+            };
         }
     }
 }

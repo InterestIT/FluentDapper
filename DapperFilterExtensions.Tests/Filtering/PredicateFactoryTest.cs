@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using DapperExtensions;
+using DapperFilterExtensions.Data.Predicates;
 using DapperFilterExtensions.Filtering;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

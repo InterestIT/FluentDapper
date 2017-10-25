@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using DapperFilterExtensions.Data;
+using DapperFilterExtensions.Data.Predicates;
 using DapperFilterExtensions.Filtering;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,12 +17,14 @@ namespace DapperFilterExtensions.Tests.Data
     {
         private Mock<IClassMapperFactory> _classMapperFactoryMock;
         private Mock<IPredicateFactory> _predicateFactoryMock;
+        private Mock<IPredicateQueryBuilderFactory> _predicateQueryBuilderFactoryMock;
 
         [TestInitialize]
         public void TestInitialize()
         {
             _classMapperFactoryMock = new Mock<IClassMapperFactory>(MockBehavior.Strict);
             _predicateFactoryMock = new Mock<IPredicateFactory>(MockBehavior.Strict);
+            _predicateQueryBuilderFactoryMock = new Mock<IPredicateQueryBuilderFactory>(MockBehavior.Strict);
         }
 
         #region CompileShouldCompileSimpleSelect
@@ -34,7 +37,7 @@ namespace DapperFilterExtensions.Tests.Data
 
             _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(new ArticleClassMapper());
 
-            var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object);
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, _predicateQueryBuilderFactoryMock.Object);
 
             // Act
             var query = queryBuilder.Compile();
@@ -56,7 +59,7 @@ namespace DapperFilterExtensions.Tests.Data
 
             _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(new ArticleClassMapper());
 
-            var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, fields);
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, _predicateQueryBuilderFactoryMock.Object, fields);
 
             // Act
             var query = queryBuilder.Compile();

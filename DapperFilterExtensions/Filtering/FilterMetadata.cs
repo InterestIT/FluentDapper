@@ -1,6 +1,6 @@
 using System;
 using System.Linq.Expressions;
-using DapperExtensions;
+using DapperFilterExtensions.Data.Predicates;
 
 namespace DapperFilterExtensions.Filtering
 {

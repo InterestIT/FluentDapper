@@ -54,6 +54,14 @@
     <Compile Include="Data\IGateway.cs" />
     <Compile Include="Data\IQueryBuilder.cs" />
     <Compile Include="Data\ISelectQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\ExistsPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\FieldPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\IPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\PredicateGroupQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\PredicateQueryBuilderFactory.cs" />
+    <Compile Include="Data\Predicates\ReflectionHelper.cs" />
+    <Compile Include="Data\Query.cs" />
+    <Compile Include="Data\QueryParameter.cs" />
     <Compile Include="Data\SelectQueryBuilder.cs" />
     <Compile Include="Data\SortDirection.cs" />
     <Compile Include="Data\SqlConnectionFactory.cs" />
