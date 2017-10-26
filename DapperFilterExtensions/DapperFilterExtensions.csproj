@@ -48,19 +48,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\ClassMapperFactory.cs" />
     <Compile Include="Data\Gateway.cs" />
     <Compile Include="Data\IClassMapperFactory.cs" />
     <Compile Include="Data\IDbConnectionFactory.cs" />
+    <Compile Include="Data\IExecutableSelectQuery.cs" />
     <Compile Include="Data\IGateway.cs" />
+    <Compile Include="Data\IQuery.cs" />
     <Compile Include="Data\IQueryBuilder.cs" />
+    <Compile Include="Data\IQueryParameter.cs" />
     <Compile Include="Data\ISelectQueryBuilder.cs" />
+    <Compile Include="Data\ISqlBuilder.cs" />
+    <Compile Include="Data\Predicates\BasePredicate.cs" />
+    <Compile Include="Data\Predicates\ComparePredicate.cs" />
     <Compile Include="Data\Predicates\ExistsPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\FieldPredicate.cs" />
     <Compile Include="Data\Predicates\FieldPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\GroupOperator.cs" />
+    <Compile Include="Data\Predicates\IBasePredicate.cs" />
+    <Compile Include="Data\Predicates\IComparePredicate.cs" />
+    <Compile Include="Data\Predicates\IFieldPredicate.cs" />
+    <Compile Include="Data\Predicates\IPredicate.cs" />
+    <Compile Include="Data\Predicates\IPredicateGroup.cs" />
     <Compile Include="Data\Predicates\IPredicateQueryBuilder.cs" />
+    <Compile Include="Data\Predicates\Operator.cs" />
+    <Compile Include="Data\Predicates\PredicateGroup.cs" />
     <Compile Include="Data\Predicates\PredicateGroupQueryBuilder.cs" />
     <Compile Include="Data\Predicates\PredicateQueryBuilderFactory.cs" />
     <Compile Include="Data\Predicates\ReflectionHelper.cs" />
+    <Compile Include="Data\Property.cs" />
     <Compile Include="Data\Query.cs" />
+    <Compile Include="Data\QueryBuilder.cs" />
     <Compile Include="Data\QueryParameter.cs" />
     <Compile Include="Data\SelectQueryBuilder.cs" />
     <Compile Include="Data\SortDirection.cs" />

@@ -71,6 +71,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\QueryBuilderIntegrationTest.cs" />
     <Compile Include="Data\TestObjects.cs" />
     <Compile Include="Data\QueryBuilderTest.cs" />
     <Compile Include="Data\SelectQueryBuilderTest.cs" />

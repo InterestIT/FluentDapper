@@ -12,11 +12,6 @@ using DapperFilterExtensions.Filtering;
 
 namespace DapperFilterExtensions.Data
 {
-    public class Property
-    {
-        public string Name { get; set; }
-        public string Alias { get; set; }
-    }
     /// <summary>
     /// Select query builder.
     /// </summary>
@@ -32,7 +27,6 @@ namespace DapperFilterExtensions.Data
         private readonly IPredicateQueryBuilderFactory _predicateQueryBuilderFactory;
 
         //private readonly Expression<Func<TData, object>>[] _propertyExpressions;
-
         private readonly Dictionary<Type, List<Property>> _properties = new Dictionary<Type, List<Property>>();
         private readonly List<Type> _joins = new List<Type>();
 
@@ -47,20 +41,20 @@ namespace DapperFilterExtensions.Data
         #region Constructor
 
         /// <summary>
-        /// Create a new instance of the <see cref="SelectQueryBuilder{TData,TViewData}"/> class.
+        /// Create a new instance of the <see cref="T:DapperFilterExtensions.Data.SelectQueryBuilder`2" /> class.
         /// </summary>
         /// <param name="classMapperFactory"></param>
         /// <param name="predicateFactory"></param>
         /// <param name="predicateQueryBuilderFactory"></param>
         /// <param name="propertyExpressions">The field set to return; or all propertyExpressions if <c>null</c> is provided.</param>
-        public SelectQueryBuilder(IClassMapperFactory classMapperFactory, IPredicateFactory predicateFactory, IPredicateQueryBuilderFactory predicateQueryBuilderFactory, params Expression<Func<TData, object>>[] propertyExpressions)
+        /// <inheritdoc />
+        public SelectQueryBuilder(
+            IClassMapperFactory classMapperFactory,
+            IPredicateFactory predicateFactory,
+            IPredicateQueryBuilderFactory predicateQueryBuilderFactory,
+            params Expression<Func<TData, object>>[] propertyExpressions)
+            : this(classMapperFactory, predicateFactory, predicateQueryBuilderFactory, new SqlServerDialect(), propertyExpressions)
         {
-            _classMapperFactory = classMapperFactory;
-            _predicateFactory = predicateFactory;
-            _predicateQueryBuilderFactory = predicateQueryBuilderFactory;
-            //_propertyExpressions = propertyExpressions;
-            _properties[typeof(TData)] = GetProperties(propertyExpressions);
-            Dialect = new SqlServerDialect();
         }
 
         /// <summary>
@@ -71,14 +65,22 @@ namespace DapperFilterExtensions.Data
         /// <param name="predicateQueryBuilderFactory"></param>
         /// <param name="sqlDialect">The SQL dialect to use.</param>
         /// <param name="propertyExpressions">The field set to return; or all propertyExpressions if <c>null</c> is provided.</param>
-        public SelectQueryBuilder(IClassMapperFactory classMapperFactory, IPredicateFactory predicateFactory, IPredicateQueryBuilderFactory predicateQueryBuilderFactory, ISqlDialect sqlDialect, params Expression<Func<TData, object>>[] propertyExpressions)
+        /// <inheritdoc />
+        public SelectQueryBuilder(
+            IClassMapperFactory classMapperFactory,
+            IPredicateFactory predicateFactory,
+            IPredicateQueryBuilderFactory predicateQueryBuilderFactory,
+            ISqlDialect sqlDialect,
+            params Expression<Func<TData, object>>[] propertyExpressions)
         {
             _classMapperFactory = classMapperFactory;
-            //_propertyExpressions = propertyExpressions;
-            _properties[typeof(TData)] = GetProperties(propertyExpressions);
-            Dialect = sqlDialect;
             _predicateFactory = predicateFactory;
             _predicateQueryBuilderFactory = predicateQueryBuilderFactory;
+
+            Dialect = sqlDialect;
+
+            //_propertyExpressions = propertyExpressions;
+            _properties[typeof(TData)] = GetProperties(propertyExpressions);
         }
 
         #endregion
@@ -127,7 +129,7 @@ namespace DapperFilterExtensions.Data
         /// <inheritdoc />
         public IExecutableSelectQuery<TData, TViewData> Compile()
         {
-            _query = $"SELECT {GetColumnNames()} FROM {GetTableName()} {GetJoins()}".Trim();
+            _query = $"SELECT {GetColumnNames()} FROM {GetTableName()} {CompileJoins()} {CompileSorts()}".Trim();
             _compiled = true;
 
             return this;
@@ -204,10 +206,83 @@ namespace DapperFilterExtensions.Data
 
         #endregion
 
-        // Private methods
-        #region GetJoins
+        // Underlying interface implementations
+        #region ISqlBuilder
 
-        private string GetJoins()
+        #region IdentitySql
+
+        /// <inheritdoc />
+        public string IdentitySql(IClassMapper classMapper)
+        {
+            return Dialect.GetIdentitySql(GetTableName(classMapper));
+        }
+
+        #endregion
+        #region GetTableName
+
+        /// <inheritdoc />
+        public string GetTableName(IClassMapper classMapper)
+        {
+            return Dialect.GetTableName(classMapper.SchemaName, classMapper.TableName, null);
+        }
+
+        #endregion
+        #region GetColumnName
+
+        /// <inheritdoc />
+        public string GetColumnName(Type type, string propertyName, bool includeAlias)
+        {
+            return GetColumnName(type, propertyName, includeAlias, null);
+        }
+
+        /// <inheritdoc />
+        public string GetColumnName(Type type, string propertyName, bool includeAlias, string alias)
+        {
+            var classMapper = _classMapperFactory.Get(type);
+            return GetColumnName(classMapper, propertyName, includeAlias, alias);
+        }
+
+        /// <inheritdoc />
+        public string GetColumnName(IClassMapper classMapper, string propertyName, bool includeAlias)
+        {
+            return GetColumnName(classMapper, propertyName, includeAlias, null);
+        }
+
+        /// <inheritdoc />
+        public string GetColumnName(IClassMapper classMapper, string propertyName, bool includeAlias, string alias)
+        {
+            var propertyMap =
+                classMapper.Properties.SingleOrDefault(p => p.Name.Equals(propertyName, StringComparison.InvariantCultureIgnoreCase)) ??
+                throw new ArgumentException($"Could not find '{propertyName}' in class mapper '{classMapper.GetType().Name}'.");
+
+            return GetColumnName(classMapper, propertyMap, includeAlias);
+        }
+
+        /// <inheritdoc />
+        public string GetColumnName(IClassMapper classMapper, IPropertyMap property, bool includeAlias)
+        {
+            return GetColumnName(classMapper, property, includeAlias, null);
+        }
+
+        /// <inheritdoc />
+        public string GetColumnName(IClassMapper classMapper, IPropertyMap property, bool includeAlias, string alias)
+        {
+            if (!includeAlias)
+                alias = null;
+            else if (string.IsNullOrEmpty(alias) && property.ColumnName != property.Name)
+                alias = property.Name;
+
+            return Dialect.GetColumnName(GetTableName(classMapper), property.ColumnName, alias);
+        }
+
+        #endregion
+
+        #endregion
+
+        // Private methods
+        #region CompileJoins
+
+        private string CompileJoins()
         {
             if (_joins.Count == 0)
                 return string.Empty;
@@ -227,11 +302,13 @@ namespace DapperFilterExtensions.Data
             return string.Join(" ", joinSqlStatements);
         }
 
-        private string GetForeignKeyColumnName(IClassMapper sourceClassMapper, IClassMapper targetClassMapper)
+        #endregion
+        #region CompileJoins
+
+        private string CompileSorts()
         {
-            var sourcePropertyName = $"{targetClassMapper.EntityType.Name}Id";
-            var sourceColumnName = GetColumnName(sourceClassMapper, sourcePropertyName, false);
-            return sourceColumnName;
+            // TODO Implement.
+            return string.Empty;
         }
 
         #endregion
@@ -267,6 +344,17 @@ namespace DapperFilterExtensions.Data
         }
 
         #endregion
+        #region GetForeignKeyColumnName
+
+        private string GetForeignKeyColumnName(IClassMapper sourceClassMapper, IClassMapper targetClassMapper)
+        {
+            var sourcePropertyName = $"{targetClassMapper.EntityType.Name}Id";
+            var sourceColumnName = GetColumnName(sourceClassMapper, sourcePropertyName, false);
+            return sourceColumnName;
+        }
+
+        #endregion
+
         #region GetProperties
 
         /// <summary>
@@ -346,68 +434,6 @@ namespace DapperFilterExtensions.Data
             //}
 
             throw new NotSupportedException($"Unary expression type \'{unaryExpression.Operand.GetType().Name}\' is not implemented.");
-        }
-
-        #endregion
-
-        /// <inheritdoc />
-        public string IdentitySql(IClassMapper classMapper)
-        {
-            return Dialect.GetIdentitySql(GetTableName(classMapper));
-        }
-
-        /// <inheritdoc />
-        public string GetTableName(IClassMapper classMapper)
-        {
-            return Dialect.GetTableName(classMapper.SchemaName, classMapper.TableName, null);
-        }
-
-        #region GetColumnName
-
-        /// <inheritdoc />
-        public string GetColumnName(Type type, string propertyName, bool includeAlias)
-        {
-            return GetColumnName(type, propertyName, includeAlias, null);
-        }
-
-        /// <inheritdoc />
-        public string GetColumnName(Type type, string propertyName, bool includeAlias, string alias)
-        {
-            var classMapper = _classMapperFactory.Get(type);
-            return GetColumnName(classMapper, propertyName, includeAlias, alias);
-        }
-
-        /// <inheritdoc />
-        public string GetColumnName(IClassMapper classMapper, string propertyName, bool includeAlias)
-        {
-            return GetColumnName(classMapper, propertyName, includeAlias, null);
-        }
-
-        /// <inheritdoc />
-        public string GetColumnName(IClassMapper classMapper, string propertyName, bool includeAlias, string alias)
-        {
-            var propertyMap =
-                classMapper.Properties.SingleOrDefault(p => p.Name.Equals(propertyName, StringComparison.InvariantCultureIgnoreCase)) ??
-                throw new ArgumentException($"Could not find '{propertyName}' in class mapper '{classMapper.GetType().Name}'.");
-
-            return GetColumnName(classMapper, propertyMap, includeAlias);
-        }
-
-        /// <inheritdoc />
-        public string GetColumnName(IClassMapper classMapper, IPropertyMap property, bool includeAlias)
-        {
-            return GetColumnName(classMapper, property, includeAlias, null);
-        }
-
-        /// <inheritdoc />
-        public string GetColumnName(IClassMapper classMapper, IPropertyMap property, bool includeAlias, string alias)
-        {
-            if (!includeAlias)
-                alias = null;
-            else if (string.IsNullOrEmpty(alias) && property.ColumnName != property.Name)
-                alias = property.Name;
-
-            return Dialect.GetColumnName(GetTableName(classMapper), property.ColumnName, alias);
         }
 
         #endregion

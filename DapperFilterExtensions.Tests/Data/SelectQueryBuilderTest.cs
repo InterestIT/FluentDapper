@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using DapperExtensions.Sql;
 using DapperFilterExtensions.Data;
 using DapperFilterExtensions.Data.Predicates;
 using DapperFilterExtensions.Filtering;
@@ -27,15 +29,79 @@ namespace DapperFilterExtensions.Tests.Data
             _predicateQueryBuilderFactoryMock = new Mock<IPredicateQueryBuilderFactory>(MockBehavior.Strict);
         }
 
-        #region CompileShouldCompileSimpleSelect
+        // Constructor
+        #region ConstructorShouldSetDefaultDialectAndAllPropertiesIfNoneProvided
 
         [TestMethod]
-        public void CompileShouldCompileSimpleSelect()
+        public void ConstructorShouldSetDefaultDialectAndAllPropertiesIfNoneProvided()
+        {
+            // Arrange
+            var expectedProperties = new Dictionary<Type, List<Property>>
+            {
+                {
+                    typeof(Article), new List<Property>
+                    {
+                        new Property{Name=nameof(Article.Id)},
+                        new Property{Name=nameof(Article.ArticleTypeId)},
+                        new Property{Name=nameof(Article.Name)}
+                    }
+                }
+            };
+
+            // Act
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(
+                _classMapperFactoryMock.Object,
+                _predicateFactoryMock.Object,
+                _predicateQueryBuilderFactoryMock.Object);
+
+            // Assert
+            queryBuilder.Dialect.Should().NotBeNull().And.BeOfType<SqlServerDialect>();
+            GetPrivate<Dictionary<Type, List<Property>>>(queryBuilder, "_properties").ShouldBeEquivalentTo(expectedProperties);
+        }
+
+        #endregion
+        #region ConstructorShouldSetDefaultDialectAndProvidedPropertiesIfProvided
+
+        [TestMethod]
+        public void ConstructorShouldSetDefaultDialectAndProvidedPropertiesIfProvided()
+        {
+            // Arrange
+            var expectedProperties = new Dictionary<Type, List<Property>>
+            {
+                {
+                    typeof(Article), new List<Property>
+                    {
+                        new Property{Name=nameof(Article.Name)}
+                    }
+                }
+            };
+
+            // Act
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(
+                _classMapperFactoryMock.Object,
+                _predicateFactoryMock.Object,
+                _predicateQueryBuilderFactoryMock.Object,
+                a => a.Name);
+
+            // Assert
+            queryBuilder.Dialect.Should().NotBeNull().And.BeOfType<SqlServerDialect>();
+            GetPrivate<Dictionary<Type, List<Property>>>(queryBuilder, "_properties").ShouldBeEquivalentTo(expectedProperties);
+        }
+
+        #endregion
+
+        // Compile
+        #region CompileShouldCompileSelect
+
+        [TestMethod]
+        public void CompileShouldCompileSelect()
         {
             // Arrange
             const string expectedQuery = "SELECT [Articles].[Id], [Articles].[ArticleTypeId], [Articles].[Name] FROM [Articles]";
 
-            _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(new ArticleClassMapper());
+            var articleClassMapper = new ArticleClassMapper();
+            _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(articleClassMapper);
+            _classMapperFactoryMock.Setup(f => f.Get(typeof(Article))).Returns(articleClassMapper);
 
             var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, _predicateQueryBuilderFactoryMock.Object);
 
@@ -45,19 +111,24 @@ namespace DapperFilterExtensions.Tests.Data
             // Assert
             GetPrivate<bool>(query, "_compiled").Should().BeTrue();
             GetPrivate<string>(query, "_query").Should().Be(expectedQuery);
+
+            _classMapperFactoryMock.Verify(f => f.Get<Article>(), Times.Once);
+            _classMapperFactoryMock.Verify(f => f.Get(typeof(Article)), Times.Once);
         }
 
         #endregion
-        #region CompileShouldCompileSimpleSelectUsingColumnSpecification
+        #region CompileShouldSelectWithColumnSpecification
 
         [TestMethod]
-        public void CompileShouldCompileSimpleSelectUsingColumnSpecification()
+        public void CompileShouldSelectWithColumnSpecification()
         {
             // Arrange
             Expression<Func<Article, object>>[] fields = { a => a.Id };
             const string expectedQuery = "SELECT [Articles].[Id] FROM [Articles]";
 
-            _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(new ArticleClassMapper());
+            var articleClassMapper = new ArticleClassMapper();
+            _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(articleClassMapper);
+            _classMapperFactoryMock.Setup(f => f.Get(typeof(Article))).Returns(articleClassMapper);
 
             var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, _predicateQueryBuilderFactoryMock.Object, fields);
 
@@ -67,6 +138,40 @@ namespace DapperFilterExtensions.Tests.Data
             // Assert
             GetPrivate<bool>(query, "_compiled").Should().BeTrue();
             GetPrivate<string>(query, "_query").Should().Be(expectedQuery);
+
+            _classMapperFactoryMock.Verify(f => f.Get<Article>(), Times.Once);
+            _classMapperFactoryMock.Verify(f => f.Get(typeof(Article)), Times.Once);
+        }
+
+        #endregion
+        #region CompileShouldSelectWithColumnSpecificationAndJoins
+
+        [TestMethod]
+        public void CompileShouldSelectWithColumnSpecificationAndJoins()
+        {
+            // Arrange
+            Expression<Func<Article, object>>[] fields = { a => a.Id };
+            const string expectedQuery = "SELECT [Articles].[Id], [ArticleTypes].[Name] AS [ArticleTypeName] FROM [Articles] INNER JOIN [ArticleTypes] ON [Articles].[ArticleTypeId] = [ArticleTypes].[Id]";
+
+            var articleClassMapper = new ArticleClassMapper();
+            var articleTypeClassMapper = new ArticleTypeClassMapper();
+            _classMapperFactoryMock.Setup(f => f.Get<Article>()).Returns(articleClassMapper);
+            _classMapperFactoryMock.Setup(f => f.Get(typeof(Article))).Returns(articleClassMapper);
+            _classMapperFactoryMock.Setup(f => f.Get(typeof(ArticleType))).Returns(articleTypeClassMapper);
+
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(_classMapperFactoryMock.Object, _predicateFactoryMock.Object, _predicateQueryBuilderFactoryMock.Object, fields);
+            queryBuilder.Join<ArticleType>(at => at.Name);
+
+            // Act
+            var query = queryBuilder.Compile();
+
+            // Assert
+            GetPrivate<bool>(query, "_compiled").Should().BeTrue();
+            GetPrivate<string>(query, "_query").Should().Be(expectedQuery);
+
+            _classMapperFactoryMock.Verify(f => f.Get<Article>(), Times.Exactly(2));
+            _classMapperFactoryMock.Verify(f => f.Get(typeof(Article)), Times.Once);
+            _classMapperFactoryMock.Verify(f => f.Get(typeof(ArticleType)), Times.Exactly(2));
         }
 
         #endregion
