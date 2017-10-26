@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using DapperExtensions.Mapper;
 using DapperExtensions.Sql;
 using DapperFilterExtensions.Data;
 using DapperFilterExtensions.Data.Predicates;
@@ -17,9 +18,15 @@ namespace DapperFilterExtensions.Tests.Data
     [ExcludeFromCodeCoverage]
     public class SelectQueryBuilderTest
     {
+        #region Variables
+
         private Mock<IClassMapperFactory> _classMapperFactoryMock;
         private Mock<IPredicateFactory> _predicateFactoryMock;
         private Mock<IPredicateQueryBuilderFactory> _predicateQueryBuilderFactoryMock;
+
+        #endregion
+
+        #region TestInitialize
 
         [TestInitialize]
         public void TestInitialize()
@@ -28,6 +35,8 @@ namespace DapperFilterExtensions.Tests.Data
             _predicateFactoryMock = new Mock<IPredicateFactory>(MockBehavior.Strict);
             _predicateQueryBuilderFactoryMock = new Mock<IPredicateQueryBuilderFactory>(MockBehavior.Strict);
         }
+
+        #endregion
 
         // Constructor
         #region ConstructorShouldSetDefaultDialectAndAllPropertiesIfNoneProvided
@@ -86,6 +95,35 @@ namespace DapperFilterExtensions.Tests.Data
             // Assert
             queryBuilder.Dialect.Should().NotBeNull().And.BeOfType<SqlServerDialect>();
             GetPrivate<Dictionary<Type, List<Property>>>(queryBuilder, "_properties").ShouldBeEquivalentTo(expectedProperties);
+        }
+
+        #endregion
+
+        // GetColumnName
+        #region GetColumnNameShouldGetColumnNameForTypeAndPropertyName
+
+        [TestMethod]
+        public void GetColumnNameShouldGetColumnNameForTypeAndPropertyName()
+        {
+            // Arrange
+            const string articleTableName = "Articles";
+
+            var articleClassMapperMock = GetClassMapperMock<Article>(articleTableName, nameof(Article.Name));
+
+            _classMapperFactoryMock.Setup(f => f.Get(typeof(Article))).Returns(articleClassMapperMock.Object);
+
+            var queryBuilder = new SelectQueryBuilder<Article, Article>(
+                _classMapperFactoryMock.Object,
+                _predicateFactoryMock.Object,
+                _predicateQueryBuilderFactoryMock.Object);
+
+            // Act
+            var columnName = queryBuilder.GetColumnName(typeof(Article), nameof(Article.Name), false);
+
+            // Assert
+            columnName.Should().Be($"[{articleTableName}].[{nameof(Article.Name)}]");
+
+            _classMapperFactoryMock.Verify(f => f.Get(typeof(Article)), Times.Once);
         }
 
         #endregion
@@ -177,6 +215,23 @@ namespace DapperFilterExtensions.Tests.Data
         #endregion
 
         // Private methods
+        #region GetClassMapperMock
+
+        private static Mock<IClassMapper<TData>> GetClassMapperMock<TData>(string articleTableName, params string[] properties) where TData : class
+        {
+            IList<IPropertyMap> propertyMaps = new List<IPropertyMap>();
+            foreach (var property in properties)
+                propertyMaps.Add(new PropertyMap(typeof(Article).GetProperty(property)));
+
+            var classMapperMock = new Mock<IClassMapper<TData>>(MockBehavior.Strict);
+            classMapperMock.SetupGet(m => m.SchemaName).Returns(default(string));
+            classMapperMock.SetupGet(m => m.TableName).Returns(articleTableName);
+            classMapperMock.SetupGet(m => m.Properties).Returns(propertyMaps);
+            return classMapperMock;
+        }
+
+        #endregion
+
         #region GetPrivate
 
         private static T GetPrivate<T>(object instance, string fieldName)

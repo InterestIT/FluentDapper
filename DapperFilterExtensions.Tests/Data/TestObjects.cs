@@ -8,7 +8,7 @@ using DapperFilterExtensions.Filtering;
 namespace DapperFilterExtensions.Tests.Data
 {
     [ExcludeFromCodeCoverage]
-    internal class Article
+    public class Article
     {
         public int Id { get; set; }
         public int ArticleTypeId { get; set; }
@@ -16,7 +16,7 @@ namespace DapperFilterExtensions.Tests.Data
     }
 
     [ExcludeFromCodeCoverage]
-    internal sealed class ArticleClassMapper : ClassMapper<Article>
+    public sealed class ArticleClassMapper : ClassMapper<Article>
     {
         public ArticleClassMapper()
         {
@@ -37,7 +37,7 @@ namespace DapperFilterExtensions.Tests.Data
     }
 
     [ExcludeFromCodeCoverage]
-    internal class ArticleFilterMetadataProvider : IFilterMetadataProvider
+    public class ArticleFilterMetadataProvider : IFilterMetadataProvider
     {
         Type IFilterMetadataProvider.Type => typeof(ArticleFilter);
 
@@ -54,14 +54,14 @@ namespace DapperFilterExtensions.Tests.Data
     }
 
     [ExcludeFromCodeCoverage]
-    internal class ArticleType
+    public class ArticleType
     {
         public int Id { get; set; }
         public string Name { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
-    internal sealed class ArticleTypeClassMapper : ClassMapper<ArticleType>
+    public sealed class ArticleTypeClassMapper : ClassMapper<ArticleType>
     {
         public ArticleTypeClassMapper()
         {
@@ -74,5 +74,4 @@ namespace DapperFilterExtensions.Tests.Data
             AutoMap();
         }
     }
-
 }
