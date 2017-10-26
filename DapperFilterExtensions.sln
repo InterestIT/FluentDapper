@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{F790423A-A4AA-4D12-9A27-0782A25C0938}"
 	ProjectSection(SolutionItems) = preProject
@@ -13,6 +13,15 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperFilterExtensions", "DapperFilterExtensions\DapperFilterExtensions.csproj", "{C9202ECE-BBA7-440A-B5FA-540B81C0F4FF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DapperFilterExtensions.Tests", "DapperFilterExtensions.Tests\DapperFilterExtensions.Tests.csproj", "{62DFCB61-3C0C-4B98-8FE0-C195248BF9FA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Miscellaneous", "Miscellaneous", "{758E88E4-91FD-4B32-9240-9BA4DF1C7B91}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		DapperFilterExtensions.sln.DotSettings = DapperFilterExtensions.sln.DotSettings
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
