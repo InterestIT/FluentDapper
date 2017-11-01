@@ -1,2 +1,2 @@
-# DapperFilterExtensions
-A library providing filtering functionality for Dapper(Extensions).
+# FluentDapper
+A library providing querying and filtering functionality for Dapper using fluent syntax.
